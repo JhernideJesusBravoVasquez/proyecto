@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "229357556827",
+    "firebase_url": "https://extracurriculares-69e35-default-rtdb.firebaseio.com",
+    "project_id": "extracurriculares-69e35",
+    "storage_bucket": "extracurriculares-69e35.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:229357556827:android:aeae59a39f6994ca905b7e",
+        "android_client_info": {
+          "package_name": "com.example.residencia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwDAMjuooHJ9b_RYpoCVdDvRKzfCKj25o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
