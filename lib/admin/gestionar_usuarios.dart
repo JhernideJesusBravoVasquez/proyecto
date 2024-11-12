@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'add_student_page.dart';
 import 'modificar_estudiantes.dart';
 import 'modificar_personal.dart';
+import 'agregar_profesor.dart';
 
 class GestionarUsuarios extends StatefulWidget {
   @override
@@ -166,6 +167,19 @@ class _GestionarUsuarios extends State<GestionarUsuarios> {
             ElevatedButton(
               onPressed: _agregarNuevoEstudiante,
               child: Text('Agregar Nuevo Estudiante'),
+            ),
+
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:(
+                      context)=>AgregarProfesor()),
+                );
+              },
+              child: Text('Agregar profesor'),
             ),
           ],
         ),

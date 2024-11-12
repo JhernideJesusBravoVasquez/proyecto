@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'home_profesor.dart'; // Página de bienvenida para profesores
-import '../main.dart'; // Página principal
+import 'home_profesor.dart';
+import '../main.dart';
 
 class LoginProfesor extends StatefulWidget {
   @override
-  _LoginTeacherState createState() => _LoginTeacherState();
+  _TeacherLoginPageState createState() => _TeacherLoginPageState();
 }
 
-class _LoginTeacherState extends State<LoginProfesor> {
+class _TeacherLoginPageState extends State<LoginProfesor> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _idController = TextEditingController();
 
-  bool _isLoading = false; // Indicador de carga
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +48,8 @@ class _LoginTeacherState extends State<LoginProfesor> {
             ),
             SizedBox(height: size.height * 0.02),
             TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Contraseña'),
+              controller: _idController,
+              decoration: InputDecoration(labelText: 'ID del Profesor'),
               obscureText: true,
             ),
             SizedBox(height: size.height * 0.04),
@@ -59,7 +59,7 @@ class _LoginTeacherState extends State<LoginProfesor> {
                     width: 200,
                     height: 40,
                     child: ElevatedButton(
-                      onPressed: _loginWithEmailAndPassword,
+                      onPressed: _loginWithEmailAndId,
                       child: Text('Iniciar Sesión'),
                     ),
                   ),
@@ -69,31 +69,45 @@ class _LoginTeacherState extends State<LoginProfesor> {
     );
   }
 
-  // Método para realizar el login del profesor
-  void _loginWithEmailAndPassword() async {
+  // Método para realizar login con Firebase usando correo e ID
+  void _loginWithEmailAndId() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
       String email = _emailController.text.trim();
-      String password = _passwordController.text.trim();
+      String id = _idController.text.trim();
 
-      // Verifica si el profesor existe en la colección 'teachers'
-      var teacherDoc = await _firestore.collection('teachers').doc(password).get();
+      // Verifica si el profesor existe en Firestore
+      var teacherDoc = await _firestore.collection('teacher').doc(id).get();
 
       if (teacherDoc.exists && teacherDoc.data()?['correo'] == email) {
-        // Iniciar sesión con Firebase Auth
-        await _auth.signInWithEmailAndPassword(email: email, password: password);
+        // Si el profesor existe y el correo coincide, obtener la información
+        String teacherId = teacherDoc.data()?['id'];
+        String teacherName = teacherDoc.data()?['nombre'];
+        String teacherFirstLastname = teacherDoc.data()?['primerApellido'];
+        String teacherSecondLastname = teacherDoc.data()?['segundoApellido'];
+        String teacherEmail = teacherDoc.data()?['correo'];
+        String teacherPhone = teacherDoc.data()?['telefono'];
 
-        // Redirigir al profesor a la página de bienvenida
+        // Iniciar sesión con Firebase Authentication
+        await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: id, // Usa el ID como contraseña
+        );
+
+        // Navegar a la página de bienvenida del profesor
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeTeacher(
-              teacherName: teacherDoc.data()?['nombre'],
-              teacherEmail: email,
-              teacherId: password,
+            builder: (context) => HomeProfesor(
+              teacherName: teacherName,
+              teacherId: teacherId,
+              teacherFirstLastname: teacherFirstLastname,
+              teacherSecondLastname: teacherSecondLastname,
+              teacherEmail: teacherEmail,
+              teacherPhone: teacherPhone,
             ),
           ),
         );
@@ -101,34 +115,47 @@ class _LoginTeacherState extends State<LoginProfesor> {
         setState(() {
           _isLoading = false;
         });
-        _showErrorDialog('Correo o contraseña incorrectos.');
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Error de autenticación'),
+              content: Text('Correo o ID incorrectos.'),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
         _isLoading = false;
       });
-      _showErrorDialog(e.message ?? 'Error desconocido');
-    }
-  }
 
-  // Mostrar un cuadro de diálogo de error
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Error de autenticación'),
-          content: Text(message),
-          actions: <Widget>[
-            TextButton(
-              child: Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+      // Mostrar mensaje de error si la autenticación falla
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error de autenticación'),
+            content: Text(e.message ?? 'Error desconocido'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 }
